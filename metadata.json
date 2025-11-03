@@ -1,0 +1,5 @@
+{
+  "name": "Aegis Quantitative Foundation",
+  "description": "A web application for quantitative analysis of cryptocurrency markets. It allows users to select a trading pair and timeframe on Bybit, fetches market data, calculates a comprehensive set of technical indicators, and generates a high-level strategic context and tactical strategy profile based on algorithmic analysis.",
+  "requestFramePermissions": []
+}
