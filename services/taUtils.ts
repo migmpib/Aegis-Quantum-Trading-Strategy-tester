@@ -136,14 +136,25 @@ export const calculatePearsonCorrelation = (dataX: number[], dataY: number[]): n
 };
 
 
-export const calculateSMA = (data: number[], period: number): (number | null)[] => {
-    if (data.length < period) return new Array(data.length).fill(null);
-    const sma: (number | null)[] = new Array(period - 1).fill(null);
+const calculateInitialMovingAverage = (data: number[], period: number) => {
+    if (data.length < period) return null;
     let sum = 0;
     for (let i = 0; i < period; i++) {
         sum += data[i];
     }
-    sma.push(sum / period);
+    return {
+        sum,
+        average: sum / period,
+        initialArray: new Array(period - 1).fill(null) as (number | null)[]
+    };
+};
+
+export const calculateSMA = (data: number[], period: number): (number | null)[] => {
+    const initialStats = calculateInitialMovingAverage(data, period);
+    if (!initialStats) return new Array(data.length).fill(null);
+
+    let { sum, average, initialArray: sma } = initialStats;
+    sma.push(average);
     for (let i = period; i < data.length; i++) {
         sum = sum - data[i - period] + data[i];
         sma.push(sum / period);
@@ -152,14 +163,12 @@ export const calculateSMA = (data: number[], period: number): (number | null)[] 
 };
 
 export const calculateEMA = (data: number[], period: number): (number | null)[] => {
-    if (data.length < period) return new Array(data.length).fill(null);
-    const ema: (number | null)[] = new Array(period - 1).fill(null);
+    const initialStats = calculateInitialMovingAverage(data, period);
+    if (!initialStats) return new Array(data.length).fill(null);
+
+    const { average, initialArray: ema } = initialStats;
     const k = 2 / (period + 1);
-    let sum = 0;
-    for (let i = 0; i < period; i++) {
-        sum += data[i];
-    }
-    let prevEma = sum / period;
+    let prevEma = average;
     ema.push(prevEma);
     for (let i = period; i < data.length; i++) {
         const newEma = (data[i] - prevEma) * k + prevEma;
