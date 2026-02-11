@@ -6,6 +6,8 @@ interface BacktestSettingsModalProps {
     onStart: (settings: BacktestSettings) => void;
 }
 
+type BacktestSettingValue = number | 'percentage_of_equity' | 'fixed_amount';
+
 const BacktestSettingsModal: React.FC<BacktestSettingsModalProps> = ({ onClose, onStart }) => {
     const [settings, setSettings] = useState<BacktestSettings>({
         initialCapital: 10000,
@@ -25,7 +27,7 @@ const BacktestSettingsModal: React.FC<BacktestSettingsModalProps> = ({ onClose, 
         setSettings(prev => ({ ...prev, [name]: type === 'number' ? parseFloat(value) : value }));
     };
     
-    const handleNestedChange = (path: string[], value: any) => {
+    const handleNestedChange = (path: string[], value: BacktestSettingValue) => {
         setSettings(prev => {
             const newSettings = JSON.parse(JSON.stringify(prev));
             let current = newSettings;
@@ -61,7 +63,7 @@ const BacktestSettingsModal: React.FC<BacktestSettingsModalProps> = ({ onClose, 
                              <div className="grid grid-cols-2 gap-2">
                                 <select 
                                     value={settings.positionSizing.type} 
-                                    onChange={e => handleNestedChange(['positionSizing', 'type'], e.target.value)} 
+                                    onChange={e => handleNestedChange(['positionSizing', 'type'], e.target.value as BacktestSettingValue)}
                                     className="input-field"
                                 >
                                     <option value="percentage_of_equity">Percent of Equity</option>
