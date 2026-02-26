@@ -56,12 +56,12 @@ export const fetchFearAndGreedIndex = async (): Promise<FearAndGreedIndex | null
 };
 
 export const fetchSymbols = async (category: string): Promise<BybitSymbol[]> => {
-    let allSymbols: any[] = [];
+    let allSymbols: BybitSymbol[] = [];
     let cursor = '';
     const limit = 1000; // Max limit per page
 
     while (true) {
-        const params: any = { category, limit };
+        const params: Record<string, string | number> = { category, limit };
         if (cursor) {
             params.cursor = cursor;
         }
@@ -78,7 +78,7 @@ export const fetchSymbols = async (category: string): Promise<BybitSymbol[]> => 
     }
     
     return allSymbols
-        .filter((s: any) => s.quoteCoin === 'USDT' && s.status === 'Trading')
+        .filter((s: BybitSymbol) => s.quoteCoin === 'USDT' && s.status === 'Trading')
         .sort((a, b) => a.symbol.localeCompare(b.symbol));
 };
 
