@@ -677,13 +677,14 @@ const CANDLES_PER_HOUR: Record<string, number> = {
 
 export const calculateMCI = (df: ProcessedKline[], ema20: (number|null)[], taker_buy_percentage: number | null, funding_rate: number | null, long_short_ratio: number | null, open_interest_delta_4h_pct: number | null, eri_report: ERIReport, timeframe: string): MCIReport => {
     // High-conviction Pattern Matching First
-    const last_close = df[df.length-1].close;
+
     
     const candlesForHour = CANDLES_PER_HOUR[timeframe] || 1; // Default to 1 for 1h and above
-    if (df.length < candlesForHour) {
+    if (df.length <= candlesForHour) {
         return { type: "Indeterminate", pattern: null, signal: "Neutral", conviction: 0, reason: "Insufficient data for 1h change calculation." };
     }
-    const price_change_pct_1h = ((last_close / df[df.length - candlesForHour].close) - 1) * 100;
+    const last_close = df[df.length-1].close;
+    const price_change_pct_1h = ((last_close / df[df.length - 1 - candlesForHour].close) - 1) * 100;
 
     if (price_change_pct_1h > 4 && (funding_rate ?? 0) < 0 && (long_short_ratio ?? 0.5) < 0.8 && (open_interest_delta_4h_pct ?? 0) > 2) {
         return { type: "Pattern", pattern: "Short Squeeze", signal: "Bullish", conviction: 90, reason: "Rapid price increase with negative funding and rising OI suggests shorts are being forced to cover." };
