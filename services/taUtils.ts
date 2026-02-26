@@ -429,21 +429,29 @@ export const detect_divergence = (df: ProcessedKline[], indicator: (number | nul
 
 export const calculate_vwap_deviation_ratio = (df: ProcessedKline[], period: number): (number|null)[] => {
     const vwap_dev: (number | null)[] = [];
+    let cumulative_tp_vol = 0;
+    let cumulative_vol = 0;
+
     for (let i = 0; i < df.length; i++) {
+        const d = df[i];
+        const typical_price = (d.high + d.low + d.close) / 3;
+        cumulative_tp_vol += typical_price * d.volume;
+        cumulative_vol += d.volume;
+
+        if (i >= period) {
+            const old_d = df[i - period];
+            const old_typical_price = (old_d.high + old_d.low + old_d.close) / 3;
+            cumulative_tp_vol -= old_typical_price * old_d.volume;
+            cumulative_vol -= old_d.volume;
+        }
+
         if (i < period - 1) {
             vwap_dev.push(null);
             continue;
         }
-        const period_df = df.slice(i - period + 1, i + 1);
-        let cumulative_tp_vol = 0;
-        let cumulative_vol = 0;
-        period_df.forEach((d: { high: number; low: number; close: number; volume: number; }) => {
-            const typical_price = (d.high + d.low + d.close) / 3;
-            cumulative_tp_vol += typical_price * d.volume;
-            cumulative_vol += d.volume;
-        });
+
         const vwap = cumulative_vol > 0 ? cumulative_tp_vol / cumulative_vol : 0;
-        const last_close = period_df[period_df.length - 1].close;
+        const last_close = df[i].close;
         vwap_dev.push(vwap > 0 ? (last_close / vwap - 1) * 100 : null);
     }
     return vwap_dev;
@@ -451,16 +459,23 @@ export const calculate_vwap_deviation_ratio = (df: ProcessedKline[], period: num
 
 export const calculate_fractal_efficiency_ratio = (df: ProcessedKline[], period: number): (number|null)[] => {
     const fer: (number | null)[] = [];
+    let path_length = 0;
+
     for (let i = 0; i < df.length; i++) {
+        if (i > 0) {
+            path_length += Math.abs(df[i].close - df[i - 1].close);
+        }
+
+        if (i >= period + 1) {
+            path_length -= Math.abs(df[i - period].close - df[i - period - 1].close);
+        }
+
         if (i < period) {
             fer.push(null);
             continue;
         }
+
         const price_change = Math.abs(df[i].close - df[i - period].close);
-        let path_length = 0;
-        for (let j = i - period + 1; j <= i; j++) {
-            path_length += Math.abs(df[j].close - df[j - 1].close);
-        }
         fer.push(path_length > 0 ? price_change / path_length : null);
     }
     return fer;
@@ -733,19 +748,27 @@ export const calculateATR = (highs: number[], lows: number[], closes: number[], 
 
 export const calculateVWAP = (df: ProcessedKline[], period: number): (number | null)[] => {
     const vwapSeries: (number | null)[] = [];
+    let cumulative_tp_vol = 0;
+    let cumulative_vol = 0;
+
     for (let i = 0; i < df.length; i++) {
+        const d = df[i];
+        const typical_price = (d.high + d.low + d.close) / 3;
+        cumulative_tp_vol += typical_price * d.volume;
+        cumulative_vol += d.volume;
+
+        if (i >= period) {
+            const old_d = df[i - period];
+            const old_typical_price = (old_d.high + old_d.low + old_d.close) / 3;
+            cumulative_tp_vol -= old_typical_price * old_d.volume;
+            cumulative_vol -= old_d.volume;
+        }
+
         if (i < period - 1) {
             vwapSeries.push(null);
             continue;
         }
-        const period_df = df.slice(i - period + 1, i + 1);
-        let cumulative_tp_vol = 0;
-        let cumulative_vol = 0;
-        period_df.forEach((d: { high: number; low: number; close: number; volume: number; }) => {
-            const typical_price = (d.high + d.low + d.close) / 3;
-            cumulative_tp_vol += typical_price * d.volume;
-            cumulative_vol += d.volume;
-        });
+
         const vwap = cumulative_vol > 0 ? cumulative_tp_vol / cumulative_vol : null;
         vwapSeries.push(vwap);
     }
